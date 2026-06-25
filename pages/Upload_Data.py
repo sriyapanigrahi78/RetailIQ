@@ -2,10 +2,16 @@ import streamlit as st
 import pandas as pd
 import mysql.connector
 
+# 1. Page Configuration
 st.set_page_config(page_title="Upload Data", page_icon="📤")
 st.title("📤 Operational Data Upload")
 
-# Database connection helper
+# 2. Gatekeeper Security Check
+if "logged_in" not in st.session_state or not st.session_state["logged_in"]:
+    st.warning("🔒 Access Denied. Please navigate to the **login** page and log in first.")
+    st.stop()
+
+# 3. Database connection helper
 def get_db_connection():
     return mysql.connector.connect(
         host=st.secrets["mysql"]["host"],
@@ -15,6 +21,7 @@ def get_db_connection():
         port=int(st.secrets["mysql"]["port"])
     )
 
+# 4. Main Upload Logic
 uploaded_file = st.file_uploader("Choose your 100-entry Retail Sales CSV file", type="csv")
 
 if uploaded_file is not None:
@@ -26,7 +33,7 @@ if uploaded_file is not None:
             conn = get_db_connection()
             cursor = conn.cursor()
             
-            # Clear previous records to avoid cluttering metrics
+            # Clear previous records to avoid duplicate metric counts
             cursor.execute("TRUNCATE TABLE sales")
             
             # Insert entries sequentially
